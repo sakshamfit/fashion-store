@@ -232,3 +232,5 @@ body:has(.brand-opening[data-phase=open]) .nav-right button{animation:fade-rise 
 @media(max-width:700px){.campaign-models{width:104%;right:-2%;bottom:190px}.campaign-lines{bottom:215px;height:75px;width:90%;right:0}.campaign-copy{bottom:30px}.campaign h2{top:90px}}
 /* The docked wordmark stays at its exact destination while navigation appears. */
 .header{animation:none}
+/* Footer credit: small, quiet, same rhythm as the rest of the bottom row. */
+.footer-credit{white-space:nowrap}.footer-credit a{color:#fff;border-bottom:1px solid #666;transition:border-color .2s}.footer-credit a:hover{border-color:#fff}
