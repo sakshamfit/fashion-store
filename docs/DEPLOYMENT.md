@@ -1,67 +1,44 @@
 # Deploy VYRN
 
-VYRN uses React, Vinext/Vite, Cloudflare Workers and D1. The complete application includes server endpoints for cart, newsletter, contact, checkout and order lookup. A static host such as GitHub Pages cannot run these endpoints. This export targets Cloudflare Workers; it is not configured as a standard Next.js/Vercel deployment.
+VYRN is a standard Next.js (App Router) application with server endpoints for cart, newsletter, contact, checkout and order lookup. It stores data in Postgres and deploys to Vercel. A static host such as GitHub Pages cannot run the endpoints.
 
 ## Install and develop
 
 Use Node.js 22.13 or later and the pinned pnpm version, 11.25.0.
 
 ```sh
-git clone https://github.com/gireeshkumarreddy/VYRN.git
-cd VYRN
 corepack enable
 corepack prepare pnpm@11.25.0 --activate
 pnpm install --frozen-lockfile
-cp .env.example .env
-pnpm build
-pnpm exec wrangler d1 execute DB --local --config dist/server/wrangler.json --file drizzle/0000_cloudy_ultimates.sql
+cp .env.example .env.local   # then set DATABASE_URL
 pnpm dev
 ```
 
-The development server defaults to port 5173. Apply the local schema to a fresh local database once. `pnpm start` serves the compiled Worker locally. Local databases and build outputs are ignored by Git.
+Without `DATABASE_URL` the storefront still renders, but cart, newsletter and contact requests return a 503 "temporarily unavailable" response.
 
-## Deploy to Cloudflare Workers
+## Deploy to Vercel
 
-1. Sign in to your Cloudflare account and create a database:
-
-   ```sh
-   pnpm exec wrangler login
-   pnpm exec wrangler d1 create vyrn-db
-   ```
-
-2. In `wrangler.deploy.jsonc`, replace the all-zero example `database_id` with the ID returned by the create command. Keep the binding name `DB`. You can also change the Worker name `vyrn` to an available name in your account.
-
-3. Build, apply database migrations, and deploy:
-
-   ```sh
-   pnpm build
-   pnpm exec wrangler d1 migrations apply DB --remote --config wrangler.deploy.jsonc
-   pnpm exec wrangler deploy --config wrangler.deploy.jsonc
-   ```
-
-Wrangler returns the deployed URL. The deployment uploads both the compiled Worker and `dist/client` assets. A custom domain can then be attached through Cloudflare. Keep using the explicit `--config wrangler.deploy.jsonc` for external deployments: `dist/server/wrangler.json` is generated for local preview and contains a placeholder database ID.
-
-For a Cloudflare Git build, use `pnpm install --frozen-lockfile && pnpm build` as the build command and `pnpm exec wrangler deploy --config wrangler.deploy.jsonc` as the deploy command after configuring the database ID and applying the migrations. Store any required account credentials in the hosting provider's secret settings.
+1. Import the GitHub repository in Vercel. The framework preset is detected as Next.js; no build or output overrides are needed (`pnpm build`, `.next`).
+2. In the project's **Storage** tab (or the Marketplace), add a **Neon Postgres** database and connect it to the project. This sets `DATABASE_URL` / `POSTGRES_URL` for you. Any other Postgres connection string also works if you set `DATABASE_URL` manually.
+3. Deploy. The four tables (`carts`, `checkout_sessions`, `messages`, `subscribers`) are created automatically with `CREATE TABLE IF NOT EXISTS` on the first request. The same schema is in `drizzle/0000_*.sql` if you prefer to apply it yourself (`psql "$DATABASE_URL" -f drizzle/0000_*.sql`). Edit `db/schema.ts` and run `pnpm db:generate` to produce new migrations.
 
 ## Payments and configuration
 
-The supplied configuration keeps payments disabled. The storefront, cart, newsletter and contact forms can run with the D1 binding, but paid checkout requires merchant configuration and the launch work listed in the root README.
+Payments are disabled by default. Paid checkout requires merchant configuration and the launch work listed in the root README. After that work is complete, add these in Vercel **Settings -> Environment Variables**:
 
-After that work is complete, add the Stripe secret directly to Cloudflare:
+- `STRIPE_SECRET_KEY`: your Stripe secret key
+- `COMMERCE_ENABLED`: `true`
 
-```sh
-pnpm exec wrangler secret put STRIPE_SECRET_KEY --config wrangler.deploy.jsonc
-```
-
-Then change `COMMERCE_ENABLED` to `"true"` in `wrangler.deploy.jsonc` and redeploy. Do not commit Stripe keys, Cloudflare credentials, `.env`, or `.dev.vars`. `.env.example` contains safe placeholder settings only.
+Do not commit Stripe keys, database URLs, or `.env*` files. `.env.example` contains safe placeholders only.
 
 ## Included files
 
 - `app/`, `components/`, `lib/`: every storefront page, animation and server endpoint.
 - `public/assets/`: all website images, including full-resolution HD WebP images and responsive variants.
 - `source-assets/hd/`: all 22 original HD PNG photographs for future editing.
-- `db/`, `drizzle/`: schema and SQL migrations.
-- `build/`, `scripts/`, `vite.config.ts`, `pnpm-lock.yaml`: complete build tooling and pinned dependencies.
+- `db/`, `drizzle/`: schema and SQL migration.
 - `docs/`: image prompts, dimensions and prior validation notes.
 
-The original Sites configuration is retained for traceability. A clean clone automatically uses the portable execution profile. External deployment uses the explicit Cloudflare config above and does not require access to the original Sites account.
+## Migrating from the Cloudflare version
+
+Earlier revisions targeted Cloudflare Workers + D1 (Vinext/Vite). That setup has been removed; existing D1 data is not migrated automatically.
