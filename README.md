@@ -8,6 +8,26 @@ Use Node 22.13+ and pnpm 11.25.0. Run `pnpm install --frozen-lockfile`, then `pn
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel deployment and database setup.
 
+## Latest upstream review and mobile update
+
+The latest `gireeshkumarreddy/VYRN/main` snapshot (`0ed4fb8`) was fetched on September 30, 2026. Its self-hosted Manrope typography, camera-flash details, alternating image masks and looping glass-framed collection carousel are integrated. This update keeps the existing Next.js/Postgres deployment and **Made by sakshamfit** credit rather than reverting to upstream's Cloudflare/D1 infrastructure. See [docs/UPSTREAM.md](docs/UPSTREAM.md) for the source commit and integration decisions.
+
+The mobile pass adds direct search, 44px tap targets, swipeable filters, reload-safe filter/sort URLs, immediate touch-category browsing, notch-safe navigation, short-screen scrolling dialogs, readable form fields, gallery overflow fixes and retryable bag errors. Hero/editorial/campaign images use Next.js optimization; product image `sizes` match the actual grid rather than downloading a full-screen image for every card. The texture fragments use a 357 KB WebP derivative instead of forcing the original 2.8 MB PNG download.
+
+## Checks
+
+```sh
+pnpm lint
+pnpm test:types
+pnpm build
+pnpm exec playwright install --with-deps chromium
+pnpm test:e2e
+```
+
+The regression suite covers 320px, 390px and 430px phones, a landscape phone, a 768px tablet and a 1440px desktop, plus public-origin/CSRF checks. UI tests intercept commerce/form APIs: they do not submit to a merchant database or Stripe. `pnpm test:e2e:ui` opens the interactive runner. Test reports, traces and local inspection artifacts are ignored by Git.
+
+To test an already running production build, set `PLAYWRIGHT_BASE_URL` to its URL. Restricted CI environments can set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an already provisioned Chromium binary. See [docs/VALIDATION.md](docs/VALIDATION.md) for the latest verification record and limitations.
+
 ## Reference fidelity
 
 The homepage follows the supplied sequence with the requested correction: VYRN opening and logo-to-header docking, A-COLD-WALL hero, one category section containing the model-change storyboard and final category lineup, VYRN Studio and its lower campaign, editorial statement, collection carousel, New Drop, Future Essentials.
@@ -26,13 +46,15 @@ No actual GLB/glTF assets were provided. Photography is not described as 3D. The
 
 ## Motion
 
-Native scrolling; a measured Web Animations logo docking sequence followed by split-panel opening; staggered hero typography, model mask and diagonal image fragments; a 5.5-second category sequence with controlled displacement and white flashes, settling into one clickable lineup; per-section image masks, collage tile entrances and line-by-line editorial text; independently masked campaign regions; automatic carousel with pointer, touch, keyboard, pause and local filter/sort controls; and diagonal white-tile product transitions.
+Native scrolling; a measured Web Animations logo docking sequence followed by split-panel opening; staggered hero typography, model mask and diagonal image fragments with staggered white camera flashes cutting to new cloth details; a desktop 5.5-second category sequence with controlled displacement and white flashes, settling into one clickable lineup (touch visitors can browse immediately); alternating top/bottom image masks, collage entrances and line-by-line editorial text; independently masked campaign regions; a right-to-left looping collection glide with a fixed glass frame and pointer, touch, keyboard, pause and local filter/sort controls; and diagonal white-tile product transitions.
 
-The reveal system leaves content visible by default and animates only after intersection. Sections cannot remain hidden because a reveal class was missed. Category animation keeps a stable section height; mobile categories become a swipeable row to prevent page jumps. Reduced-motion settings bypass opening, flashes, masks, parallax and automatic collection movement. Mobile layouts are recomposed at 700px.
+The reveal system leaves content visible by default and animates only after intersection. Sections cannot remain hidden because a reveal class was missed. Category animation keeps a stable section height; mobile categories become a swipeable row to prevent page jumps. Reduced-motion settings bypass opening, flashes, masks, parallax and automatic collection movement. Shopping layouts are recomposed at 700px, and the compact touch-friendly navigation starts at 900px.
 
 ## Assets and editing
 
 All required visual assets are under public/assets. Catalog, reference crop mappings, image source dimensions, and prices are in lib/catalog.ts. Store UI is under components/store; routes and server endpoints are under app.
+
+The site uses self-hosted Manrope variable fonts from `public/fonts/`, with the SIL Open Font License preserved as `public/fonts/Manrope-OFL.txt`. No third-party font service is required.
 
 ## Complete source export
 

@@ -16,6 +16,22 @@ pnpm dev
 
 Without `DATABASE_URL` the storefront still renders, but cart, newsletter and contact requests return a 503 "temporarily unavailable" response.
 
+## Proxied and mobile previews
+
+For an externally accessible local preview, bind Next.js to all interfaces:
+
+```sh
+pnpm dev --hostname 0.0.0.0
+# or, after pnpm build:
+pnpm start --hostname 0.0.0.0
+```
+
+Arena development origins (`*.e2b.app`) and local development origins are allowed by `next.config.ts`. Browser API calls remain relative URLs; no browser code points to a sandbox-local backend address.
+
+A reverse proxy must preserve the public `Host` header and provide the original `X-Forwarded-Proto` (`https` for HTTPS). Request validation, secure bag cookies, and Stripe return URLs use this public origin rather than Next's internal listening address. Arbitrary `X-Forwarded-Host` values are deliberately not trusted for CSRF validation.
+
+Without database configuration, the bag and checkout UI display recoverable storage errors rather than remaining stuck on a loading message. No local/demo persistence is substituted for the merchant database.
+
 ## Deploy to Vercel
 
 1. Import the GitHub repository in Vercel. The framework preset is detected as Next.js; no build or output overrides are needed (`pnpm build`, `.next`).
